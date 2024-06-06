@@ -22,6 +22,12 @@ app.config['MYSQL_USER'] = 'buchiken'
 app.config['MYSQL_PASSWORD'] = 'buken.01'
 app.config['MYSQL_DB'] = 'bblexpense'
 
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'blessing01'
+app.config['MYSQL_PASSWORD'] = 'Blessing0107'
+app.config['MYSQL_DB'] = 'bblexpense'
+
+
 mysql = MySQL(app)
 
 
