@@ -16,11 +16,7 @@ app = Flask(__name__)
 
 
 app.secret_key = 'a'
-  
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'buchiken'
-app.config['MYSQL_PASSWORD'] = 'buken.01'
-app.config['MYSQL_DB'] = 'bblexpense'
+
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'blessing01'
@@ -53,35 +49,33 @@ def signup():
 
 
 
-@app.route('/register', methods =['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     msg = ''
-    if request.method == 'POST' :
+    if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
         
-
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM register WHERE username = % s', (username, ))
+        cursor.execute('SELECT * FROM register WHERE username = %s', (username,))
         account = cursor.fetchone()
         print(account)
 
         if account:
-            msg = 'Account already exists !'
+            msg = 'Account already exists!'
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            msg = 'Invalid email address !'
+            msg = 'Invalid email address!'
         elif not re.match(r'[A-Za-z0-9]+', username):
-            msg = 'name must contain only characters and numbers !'
+            msg = 'Username must contain only characters and numbers!'
         else:
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-            cursor.execute('INSERT INTO register VALUES (NULL, % s, % s, % s)', (username, email,password))
+            cursor.execute('INSERT INTO register (username, email, password) VALUES (%s, %s, %s)', (username, email, hashed_password))
             mysql.connection.commit()
-            msg = 'You have successfully registered !'
+            msg = 'You have successfully registered!'
             return render_template('signup.html', msg=msg)
         return render_template('signup.html', msg=msg)
-        
-        
+
  
         
  #LOGIN--PAGE
@@ -90,36 +84,28 @@ def register():
 def signin():
     return render_template("login.html")
         
-@app.route('/login',methods =['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     global userid
     msg = ''
    
-  
-    if request.method == 'POST' :
+    if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         cursor = mysql.connection.cursor()
-        cursor.execute('SELECT * FROM register WHERE username = % s AND password = % s', (username, password ),)
+        cursor.execute('SELECT * FROM register WHERE username = %s', (username,))
         account = cursor.fetchone()
-        print (account)
+        print(account)
         
         if account and check_password_hash(account[3], password):
             session['loggedin'] = True
             session['id'] = account[0]
-            userid=  account[0]
+            userid = account[0]
             session['username'] = account[1]
-           
             return redirect('/home')
         else:
-            msg = 'Incorrect username / password !'
+            msg = 'Incorrect username/password!'
     return render_template('login.html', msg=msg)
-
-
-
-       
-
-
 
 
 
