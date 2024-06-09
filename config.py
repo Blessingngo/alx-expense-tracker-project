@@ -1,4 +1,5 @@
 import os
+import secrets
 
 class Config:
     SECRET_KEY = os.urandom(24)
@@ -10,3 +11,9 @@ class Config:
     TWITTER_CLIENT_SECRET = 'your-twitter-client-secret'
     LINKEDIN_CLIENT_ID = 'your-linkedin-client-id'
     LINKEDIN_CLIENT_SECRET = 'your-linkedin-client-secret'
+    MYSQL_HOST = 'localhost'
+    MYSQL_USER = 'root'
+    MYSQL_PASSWORD = 'blessing0107'
+    MYSQL_DB = 'bblexpense'
+    SECRET_KEY = secrets.token_hex(24)
+
