@@ -10,21 +10,43 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager
+from config import Config
+from oauth import init_oauth
+from models import users
+from routes import setup_routes
 
 
 app = Flask(__name__)
+app.config.from_object(Config)
 
 
 app.secret_key = 'a'
-
-
+  
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'blessing01'
-app.config['MYSQL_PASSWORD'] = 'Blessing0107'
+app.config['MYSQL_USER'] = ''
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'bblexpense'
 
-
 mysql = MySQL(app)
+
+# setup_Flask_login
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return users.get(user_id)
+
+# Initialize OAuth
+init_oauth(app)
+
+# Setup OAuth routes
+setup_routes(app)
+
+# Initialize OAuth within app context
+# with app.app_context():
+    # init_oauth(app)
 
 
 #HOME--PAGE
@@ -57,26 +79,30 @@ def register():
         email = request.form['email']
         password = request.form['password']
         
+
         cursor = mysql.connection.cursor()
         cursor.execute('SELECT * FROM register WHERE username = %s', (username,))
         account = cursor.fetchone()
-        print(account)
+        #print(account)
 
         if account:
-            msg = 'Account already exists!'
+            msg = 'Account already exists !'
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            msg = 'Invalid email address!'
+            msg = 'Invalid email address !'
         elif not re.match(r'[A-Za-z0-9]+', username):
-            msg = 'Username must contain only characters and numbers!'
+            msg = 'name must contain only characters and numbers !'
         else:
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+          #  cursor.execute('INSERT INTO register VALUES (NULL, % s, % s, % s)', (username, email,password))
+#            cursor.execute('INSERT INTO register (id, username, email, password) VALUES (%s, %s, %s)', (username, email, password))
             cursor.execute('INSERT INTO register (username, email, password) VALUES (%s, %s, %s)', (username, email, hashed_password))
             mysql.connection.commit()
-            msg = 'You have successfully registered!'
+            msg = 'You have successfully registered !'
             return render_template('signup.html', msg=msg)
-        return render_template('signup.html', msg=msg)
 
- 
+        return render_template('signup.html', msg=msg)
+        
+        
         
  #LOGIN--PAGE
     
@@ -85,29 +111,37 @@ def signin():
     return render_template("login.html")
         
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def loggin():
     global userid
     msg = ''
    
-    if request.method == 'POST':
+  
+    if request.method == 'POST' :
         username = request.form['username']
         password = request.form['password']
         cursor = mysql.connection.cursor()
+#        cursor.execute('SELECT * FROM register WHERE username = % s AND password = % s', (username,))
         cursor.execute('SELECT * FROM register WHERE username = %s', (username,))
         account = cursor.fetchone()
-        print(account)
+       # print (account)
         
         if account and check_password_hash(account[3], password):
             session['loggedin'] = True
             session['id'] = account[0]
-            userid = account[0]
+            userid=  account[0]
             session['username'] = account[1]
+           
             return redirect('/home')
         else:
-            msg = 'Incorrect username/password!'
+            msg = 'Incorrect username or password !'
+
     return render_template('login.html', msg=msg)
 
+# ABOUT PAGE
 
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 #ADDING----DATA
 
@@ -119,17 +153,19 @@ def adding():
 
 @app.route('/addexpense',methods=['GET', 'POST'])
 def addexpense():
-    if request.method == 'POST': 
+
+    if request.method == 'POST':
         date = request.form['date']
         expensename = request.form['expensename']
         amount = request.form['amount']
         paymode = request.form['paymode']
         category = request.form['category']
     
-    cursor = mysql.connection.cursor()
-    cursor.execute('INSERT INTO expenses VALUES (NULL,  % s, % s, % s, % s, % s, % s)', (session['id'] ,date, expensename, amount, paymode, category))
-    mysql.connection.commit()
-    print(date + " " + expensename + " " + amount + " " + paymode + " " + category)
+        cursor = mysql.connection.cursor()
+        # cursor.execute('INSERT INTO expenses VALUES (NULL,  % s, % s, % s, % s, % s, % s)', (session['id'] ,date, expensename, amount, paymode, category))
+        cursor.execute('INSERT INTO expenses (userid, date, expensename, amount, paymode, category) VALUES (%s, %s, %s, %s, %s, %s)', (session['id'], date, expensename, amount, paymode, category))
+        mysql.connection.commit()
+        print(date + " " + expensename + " " + amount + " " + paymode + " " + category)
     
     return redirect("/display")
 
@@ -139,10 +175,11 @@ def addexpense():
 
 @app.route("/display")
 def display():
-    print(session["username"],session['id'])
+    print(session["username"], session['id'])
     
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT * FROM expenses WHERE userid = % s AND date ORDER BY `expenses`.`date` DESC',(str(session['id'])))
+    # cursor.execute('SELECT * FROM expenses WHERE userid = %s AND date ORDER BY DESC', (str(session['id']),))
+    cursor.execute('SELECT * FROM expenses WHERE userid = %s ORDER BY date DESC', (str(session['id']),))
     expense = cursor.fetchall()
   
        
@@ -153,10 +190,10 @@ def display():
 
 #delete---the--data
 
-@app.route('/delete/<string:id>', methods = ['POST', 'GET' ])
+@app.route('/delete/<string:id>', methods=['POST', 'GET' ])
 def delete(id):
      cursor = mysql.connection.cursor()
-     cursor.execute('DELETE FROM expenses WHERE  id = {0}'.format(id))
+     cursor.execute('DELETE FROM expenses WHERE  id = %s', (id,))
      mysql.connection.commit()
      print('deleted successfully')    
      return redirect("/display")
@@ -164,8 +201,9 @@ def delete(id):
     
 #UPDATE---DATA
 
-@app.route('/edit/<id>', methods = ['POST', 'GET' ])
+@app.route('/edit/<id>', methods=['POST', 'GET' ])
 def edit(id):
+
     cursor = mysql.connection.cursor()
     cursor.execute('SELECT * FROM expenses WHERE  id = %s', (id,))
     row = cursor.fetchall()
@@ -174,14 +212,13 @@ def edit(id):
     else:
         return "Expense not found", 404
    
-    print(row[0])
-    return render_template('edit.html', expenses = row[0])
+#   print(row[0])
+#    return render_template('edit.html', expenses = row[0])
 
 
-
-
-@app.route('/update/<id>', methods = ['POST'])
+@app.route('/update/<id>', methods=['POST'])
 def update(id):
+
   if request.method == 'POST' :
    
       date = request.form['date']
@@ -192,25 +229,25 @@ def update(id):
     
       cursor = mysql.connection.cursor()
        
-      cursor.execute("UPDATE `expenses` SET `date` = % s , `expensename` = % s , `amount` = % s, `paymode` = % s, `category` = % s WHERE `expenses`.`id` = % s ",(date, expensename, amount, str(paymode), str(category),id))
+      # cursor.execute("UPDATE `expenses` SET `date` = % s , `expensename` = % s , `amount` = % s, `paymode` = % s, `category` = % s WHERE `expenses`.`id` = % s ",(date, expensename, amount, str(paymode), str(category),id))
+      cursor.execute("UPDATE expenses SET date = %s, expensename = %s, amount = %s, paymode = %s, category = %s WHERE id = %s", (date, expensename, amount, paymode, category, id))
       mysql.connection.commit()
       print('successfully updated')
       return redirect("/display")
-     
       
-    
             
  #limit
 @app.route("/limit" )
 def limit():
        return redirect('/limitn')
 
-@app.route("/limitnum" , methods = ['POST' ])
+@app.route("/limitnum" , methods=['POST' ])
 def limitnum():
      if request.method == "POST":
          number= request.form['number']
          cursor = mysql.connection.cursor()
-         cursor.execute('INSERT INTO limits VALUES (NULL, % s, % s) ',(session['id'], number))
+         # cursor.execute('INSERT INTO limits VALUES (NULL, % s, % s) ',(session['id'], number))
+         cursor.execute('INSERT INTO limits (userid, limitss) VALUES (%s, %s)', (session['id'], number))
          mysql.connection.commit()
          return redirect('/limitn')
      
@@ -218,9 +255,10 @@ def limitnum():
 @app.route("/limitn") 
 def limitn():
     cursor = mysql.connection.cursor()
-    cursor.execute('SELECT limitss FROM `limits` ORDER BY `limits`.`id` DESC LIMIT 1')
-    x= cursor.fetchone()
-    s = x[0] if x else 0
+    # cursor.execute('SELECT limitss FROM `limits` ORDER BY `limits`.`id` DESC LIMIT 1')
+    cursor.execute('SELECT limitss FROM limits ORDER BY id DESC LIMIT 1')
+    x = cursor.fetchone()
+    s = x[0] if x else 0 # Handle the case where no limit is set
     
     
     return render_template("limit.html" , y=s)
@@ -397,7 +435,7 @@ def year():
 
 @app.route('/logout')
 
-def logout():
+def loggout():
    session.pop('loggedin', None)
    session.pop('id', None)
    session.pop('username', None)
