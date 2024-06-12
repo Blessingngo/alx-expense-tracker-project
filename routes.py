@@ -1,4 +1,4 @@
-from flask import redirect, url_for, session
+from flask import redirect, url_for, session, render_template
 from authlib.integrations.flask_client import OAuth
 from flask_login import login_user, logout_user, login_required
 from models import User, users
@@ -8,7 +8,7 @@ def setup_routes(app):
 
     @app.route('/')
     def index():
-        return 'Welcome to the Expense Tracker!'
+        return render_template("home.html")
 
     @app.route('/login/<provider>')
     def login(provider):
