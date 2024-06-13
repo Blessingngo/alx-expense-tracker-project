@@ -14,9 +14,6 @@ from flask_login import LoginManager
 
 
 app = Flask(__name__)
-=======
->>>>>>> 16cdb0126410ac06366fff533f5f8e5fd101169f
-
 
 app.secret_key = 'a'
   
