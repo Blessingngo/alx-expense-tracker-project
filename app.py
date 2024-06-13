@@ -11,16 +11,19 @@ import MySQLdb.cursors
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager
+<<<<<<< HEAD
 
 
 app = Flask(__name__)
+=======
+>>>>>>> 16cdb0126410ac06366fff533f5f8e5fd101169f
 
 
 app.secret_key = 'a'
   
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = ''
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_USER'] = 'blessing'
+app.config['MYSQL_PASSWORD'] = 'blessingem.01'
 app.config['MYSQL_DB'] = 'bblexpense'
 
 mysql = MySQL(app)
@@ -44,7 +47,6 @@ def home():
 @app.route("/")
 def add():
     return render_template("home.html")
-
 
 
 #SIGN--UP--OR--REGISTER
