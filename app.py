@@ -16,8 +16,8 @@ from flask_login import LoginManager
 app.secret_key = 'a'
   
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = ''
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_USER'] = 'blessing'
+app.config['MYSQL_PASSWORD'] = 'blessingem.01'
 app.config['MYSQL_DB'] = 'bblexpense'
 
 mysql = MySQL(app)
