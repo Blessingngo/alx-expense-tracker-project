@@ -11,14 +11,6 @@ import MySQLdb.cursors
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager
-from config import Config
-from oauth import init_oauth
-from models import users
-from routes import setup_routes
-
-
-app = Flask(__name__)
-app.config.from_object(Config)
 
 
 app.secret_key = 'a'
@@ -38,16 +30,6 @@ login_manager.init_app(app)
 def load_user(user_id):
     return users.get(user_id)
 
-# Initialize OAuth
-init_oauth(app)
-
-# Setup OAuth routes
-setup_routes(app)
-
-# Initialize OAuth within app context
-# with app.app_context():
-    # init_oauth(app)
-
 
 #HOME--PAGE
 @app.route("/home")
@@ -59,7 +41,6 @@ def home():
 @app.route("/")
 def add():
     return render_template("home.html")
-
 
 
 #SIGN--UP--OR--REGISTER
