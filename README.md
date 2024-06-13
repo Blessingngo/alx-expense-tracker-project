@@ -1,6 +1,8 @@
 #BBL Expense Tracker
 BBL Expense Tracker is a web application built with Python, MySQL, HTML, CSS, JavaScript. It allows users to track and manage their expenses efficiently. This project is developed as a portfolio project for ALX.
 
+https://www.linkedin.com/posts/blessing-victor1234_my-portfolio-project-in-holberton-school-activity-7207156209265647617-VDhc?utm_source=share&utm_medium=member_android
+
 ##Table of Contents
 Features
 Technologies Used
